@@ -1,5 +1,4 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Soccer_IQ.Data;
 using Soccer_IQ.Models;
 using Soccer_IQ.Repository.IRepository;
@@ -35,31 +34,34 @@ namespace Soccer_IQ
                         )
                     };
                 });
-            builder.Services.AddScoped<PlayerStatLinker>();
 
+            builder.Services.AddScoped<PlayerStatLinker>();
             builder.Services.AddScoped<PlayerSeeder>();
+
             builder.Services.AddDbContext<AppDbContext>(
-            options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
             builder.Services.AddScoped<IRepository<Player>, PlayerRepository>();
             builder.Services.AddScoped<IRepository<Club>, ClubRepository>();
             builder.Services.AddScoped<IRepository<PLayerStat>, PlayerStatRepository>();
             builder.Services.AddScoped<IRepository<LeagueStanding>, LeagueStandingRepository>();
             builder.Services.AddScoped<IRepository<ApplicationUser>, ApplicationUserRepository>();
+
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-            .AddEntityFrameworkStores<AppDbContext>()
-             .AddDefaultTokenProviders();
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddDefaultTokenProviders();
+
             builder.Services.AddHttpClient<PredictionService>(c =>
             {
                 c.BaseAddress = new Uri("https://web-production-4057.up.railway.app/");
             });
+
             builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<StandingsSyncService>();
             builder.Services.AddControllers();
 
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -71,32 +73,29 @@ namespace Soccer_IQ
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseHttpsRedirection();
-
-
-
             app.MapControllers();
 
-            using (var scopee = app.Services.CreateScope())
+            using (var scope = app.Services.CreateScope())
             {
-                var linker = scopee.ServiceProvider.GetRequiredService<PlayerStatLinker>();
+                // Fill PlayerStats PlayerIds
+                var linker = scope.ServiceProvider.GetRequiredService<PlayerStatLinker>();
                 int updated = linker.FillPlayerIdsOffset4();
                 Console.WriteLine($"✔️  PlayerId filled for {updated} PlayerStats.");
-            }
 
+                // Create 'User' role if not exists
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                if (!await roleManager.RoleExistsAsync("User"))
+                {
+                    await roleManager.CreateAsync(new IdentityRole("User"));
+                    Console.WriteLine("✅ 'User' role created successfully.");
+                }
+            }
 
             app.Run();
-            var scope = app.Services.CreateScope();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            if (!await roleManager.RoleExistsAsync("User"))
-            {
-                await roleManager.CreateAsync(new IdentityRole("User"));
-            }
-
-
         }
     }
 }
