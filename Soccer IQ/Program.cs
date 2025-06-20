@@ -20,6 +20,7 @@ namespace Soccer_IQ
             // Add services to the container.
             builder.Services.AddScoped<CsvSeeder>();
             builder.Services.AddScoped<AuthService>();
+            builder.Services.AddScoped<IRepository<Player>, BaseRepository<Player>>();
             builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
