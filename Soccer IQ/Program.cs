@@ -21,15 +21,18 @@ namespace Soccer_IQ
             // ✅ CORS Configuration
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowVercel", policy =>
+                options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("https://soccerrm.vercel.app", "http://localhost:4200")
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
+                    policy.WithOrigins(
+                        "https://soccerrm.vercel.app",     // Vercel frontend
+                        "http://localhost:4200"            // Angular local dev
+                    )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
                 });
             });
 
-            // Add services to the container.
+            // ✅ Add services to the container
             builder.Services.AddScoped<CsvSeeder>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<PlayerStatLinker>();
@@ -57,7 +60,7 @@ namespace Soccer_IQ
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<StandingsSyncService>();
 
-            // ✅ حل JSON cycles
+            // ✅ JSON cycle fix
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -69,7 +72,7 @@ namespace Soccer_IQ
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // ✅ Middleware pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -78,21 +81,21 @@ namespace Soccer_IQ
 
             app.UseHttpsRedirection();
 
-            // ✅ Apply CORS
-            app.UseCors("AllowVercel");
+            // ✅ Apply CORS before auth
+            app.UseCors("AllowFrontend");
 
             app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapControllers();
 
+            // ✅ Scoped services init
             using (var scope = app.Services.CreateScope())
             {
-                // Fill PlayerStats PlayerIds
                 var linker = scope.ServiceProvider.GetRequiredService<PlayerStatLinker>();
                 int updated = linker.FillPlayerIdsOffset4();
-                Console.WriteLine($"✔️  PlayerId filled for {updated} PlayerStats.");
+                Console.WriteLine($"✔️ PlayerId filled for {updated} PlayerStats.");
 
-                // Create 'User' role if not exists
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
                 if (!await roleManager.RoleExistsAsync("User"))
                 {
