@@ -18,22 +18,18 @@ namespace Soccer_IQ
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // ✅ CORS Configuration
+            // ✅ Allow any origin (CORS fully open)
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowFrontend", policy =>
+                options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.WithOrigins(
-                        "https://soccerrm.vercel.app",     // Vercel frontend
-                        "http://localhost:4200" ,      // Angular local dev
-                        "https://courageous-nougat-fd1ac6.netlify.app/"
-                    )
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
                 });
             });
 
-            // ✅ Add services to the container
+            // ✅ Services
             builder.Services.AddScoped<CsvSeeder>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<PlayerStatLinker>();
@@ -61,7 +57,6 @@ namespace Soccer_IQ
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<StandingsSyncService>();
 
-            // ✅ JSON cycle fix
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -73,7 +68,6 @@ namespace Soccer_IQ
 
             var app = builder.Build();
 
-            // ✅ Middleware pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -82,15 +76,13 @@ namespace Soccer_IQ
 
             app.UseHttpsRedirection();
 
-            // ✅ Apply CORS before auth
-            app.UseCors("AllowFrontend");
+            // ✅ Apply open CORS
+            app.UseCors("AllowAll");
 
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.MapControllers();
 
-            // ✅ Scoped services init
             using (var scope = app.Services.CreateScope())
             {
                 var linker = scope.ServiceProvider.GetRequiredService<PlayerStatLinker>();
