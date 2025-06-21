@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq.Expressions;
+using Microsoft.AspNetCore.Mvc;
 using Soccer_IQ.Models;
 using Soccer_IQ.Repository.IRepository;
 
@@ -16,17 +17,25 @@ public class ClubsController : ControllerBase
     [HttpGet]
     public IActionResult GetAllClubs()
     {
-        var clubs = clubRepo.GetAll();
+        var clubs = clubRepo.GetAll(
+            includeProps: new Expression<Func<Club, object>>[] { c => c.Players }
+        );
         return Ok(clubs);
     }
+
 
     [HttpGet("{id}")]
     public IActionResult GetClub(int id)
     {
-        var club = clubRepo.GetOne(null, c => c.Id == id);
+        var club = clubRepo.GetOne(
+            includeProps: new Expression<Func<Club, object>>[] { c => c.Players },
+            expression: c => c.Id == id
+        );
+
         if (club == null) return NotFound();
         return Ok(club);
     }
+
 
     [HttpPost]
     public IActionResult CreateClub([FromBody] Club club)
