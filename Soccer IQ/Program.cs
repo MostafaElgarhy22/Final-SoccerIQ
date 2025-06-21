@@ -25,7 +25,8 @@ namespace Soccer_IQ
                 {
                     policy.WithOrigins(
                         "https://soccerrm.vercel.app",     // Vercel frontend
-                        "http://localhost:4200"            // Angular local dev
+                        "http://localhost:4200" ,      // Angular local dev
+                        "https://courageous-nougat-fd1ac6.netlify.app/"
                     )
                     .AllowAnyHeader()
                     .AllowAnyMethod();
