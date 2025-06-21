@@ -10,7 +10,7 @@ public class StandingsSyncService
     private readonly HttpClient _http;
 
     private const string Token = "77ab2943ced945ae91b4c07bb1b5974e";          // 👈 ضع التوكن هنا
-    private const string Endpoint = "https://api.football-data.org/v4/competitions/PL/standings";
+    private const string Endpoint = "https://api.football-data.org/v4/competitions/PL/standings?season=2024";
 
     public StandingsSyncService(IRepository<LeagueStanding> standingRepo,
                                 IRepository<Club> clubRepo,
