@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq.Expressions;
+using Microsoft.AspNetCore.Mvc;
 using Soccer_IQ.Models;
 using Soccer_IQ.Repository.IRepository;
 
@@ -27,10 +28,18 @@ namespace Soccer_IQ.Controllers
         [HttpGet("{id}")]
         public IActionResult GetPlayer(int id)
         {
-            var player = _playerRepo.GetOne(null, p => p.Id == id);
+            var player = _playerRepo.GetOne(
+                includeProps: new Expression<Func<Player, object>>[]
+                {
+                  p => p.Club
+                },
+                expression: p => p.Id == id
+            );
+
             if (player == null) return NotFound();
             return Ok(player);
         }
+
 
         // POST: api/players
         [HttpPost]

@@ -8,6 +8,7 @@ using System.Text;
 using Soccer_IQ.Repository;
 using Microsoft.AspNetCore.Identity;
 using Soccer_IQ.Services;
+using System.Text.Json.Serialization;
 
 namespace Soccer_IQ
 {
@@ -20,22 +21,6 @@ namespace Soccer_IQ
             // Add services to the container.
             builder.Services.AddScoped<CsvSeeder>();
             builder.Services.AddScoped<AuthService>();
-            builder.Services.AddScoped<IRepository<Player>, BaseRepository<Player>>();
-            builder.Services.AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
-                        )
-                    };
-                });
-
             builder.Services.AddScoped<PlayerStatLinker>();
             builder.Services.AddScoped<PlayerSeeder>();
 
@@ -47,6 +32,7 @@ namespace Soccer_IQ
             builder.Services.AddScoped<IRepository<PLayerStat>, PlayerStatRepository>();
             builder.Services.AddScoped<IRepository<LeagueStanding>, LeagueStandingRepository>();
             builder.Services.AddScoped<IRepository<ApplicationUser>, ApplicationUserRepository>();
+            builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<AppDbContext>()
@@ -57,11 +43,15 @@ namespace Soccer_IQ
                 c.BaseAddress = new Uri("https://web-production-4057.up.railway.app/");
             });
 
-            builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
-
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<StandingsSyncService>();
-            builder.Services.AddControllers();
+
+            // ✅ هنا الحل للمشكلة:
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                });
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
