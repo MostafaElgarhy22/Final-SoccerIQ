@@ -18,6 +18,17 @@ namespace Soccer_IQ
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // ✅ CORS Configuration
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowVercel", policy =>
+                {
+                    policy.WithOrigins("https://soccerrm.vercel.app", "http://localhost:4200")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
             // Add services to the container.
             builder.Services.AddScoped<CsvSeeder>();
             builder.Services.AddScoped<AuthService>();
@@ -46,7 +57,7 @@ namespace Soccer_IQ
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<StandingsSyncService>();
 
-            // ✅ هنا الحل للمشكلة:
+            // ✅ حل JSON cycles
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -65,9 +76,13 @@ namespace Soccer_IQ
                 app.UseSwaggerUI();
             }
 
+            app.UseHttpsRedirection();
+
+            // ✅ Apply CORS
+            app.UseCors("AllowVercel");
+
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseHttpsRedirection();
             app.MapControllers();
 
             using (var scope = app.Services.CreateScope())
