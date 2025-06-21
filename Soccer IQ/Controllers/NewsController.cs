@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization; // ⬅️ لازم تضيفه
 using System.Net.Http;
 
+[Authorize] // ✅ حماية كل الـ Endpoints في الكنترولر
 [ApiController]
 [Route("api/[controller]")]
 public class NewsController : ControllerBase

@@ -1,75 +1,76 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization; // 👈 لازم علشان [Authorize]
 using Soccer_IQ.Models;
 using Soccer_IQ.Repository.IRepository;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ClubsController : ControllerBase
+namespace Soccer_IQ.Controllers
 {
-    private readonly IRepository<Club> clubRepo;
-
-    public ClubsController(IRepository<Club> clubRepo)
+    [Authorize] // ✅ حماية كاملة لكل الـ endpoints
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ClubsController : ControllerBase
     {
-        this.clubRepo = clubRepo;
-    }
+        private readonly IRepository<Club> clubRepo;
 
-    [HttpGet]
-    [HttpGet]
-    public IActionResult GetAllClubs()
-    {
-        var clubs = clubRepo.GetAll();
-        return Ok(clubs);
-    }
+        public ClubsController(IRepository<Club> clubRepo)
+        {
+            this.clubRepo = clubRepo;
+        }
 
+        [HttpGet]
+        public IActionResult GetAllClubs()
+        {
+            var clubs = clubRepo.GetAll();
+            return Ok(clubs);
+        }
 
+        [HttpGet("{id}")]
+        public IActionResult GetClub(int id)
+        {
+            var club = clubRepo.GetOne(
+                includeProps: new Expression<Func<Club, object>>[] { c => c.Players },
+                expression: c => c.Id == id
+            );
 
-    [HttpGet("{id}")]
-    public IActionResult GetClub(int id)
-    {
-        var club = clubRepo.GetOne(
-            includeProps: new Expression<Func<Club, object>>[] { c => c.Players },
-            expression: c => c.Id == id
-        );
+            if (club == null) return NotFound();
+            return Ok(club);
+        }
 
-        if (club == null) return NotFound();
-        return Ok(club);
-    }
+        [HttpPost]
+        public IActionResult CreateClub([FromBody] Club club)
+        {
+            clubRepo.Create(club);
+            clubRepo.Commit();
+            return CreatedAtAction(nameof(GetClub), new { id = club.Id }, club);
+        }
 
+        [HttpPut("{id}")]
+        public IActionResult UpdateClub(int id, [FromBody] Club updatedClub)
+        {
+            var club = clubRepo.GetOne(null, c => c.Id == id, tracked: true);
+            if (club == null) return NotFound();
 
-    [HttpPost]
-    public IActionResult CreateClub([FromBody] Club club)
-    {
-        clubRepo.Create(club);
-        clubRepo.Commit();
-        return CreatedAtAction(nameof(GetClub), new { id = club.Id }, club);
-    }
+            club.Name = updatedClub.Name;
+            club.Country = updatedClub.Country;
+            club.Logo = updatedClub.Logo;
 
-    [HttpPut("{id}")]
-    public IActionResult UpdateClub(int id, [FromBody] Club updatedClub)
-    {
-        var club = clubRepo.GetOne(null, c => c.Id == id, tracked: true);
-        if (club == null) return NotFound();
+            clubRepo.Edit(club);
+            clubRepo.Commit();
 
-        club.Name = updatedClub.Name;
-        club.Country = updatedClub.Country;
-        club.Logo = updatedClub.Logo;
+            return Ok(club);
+        }
 
-        clubRepo.Edit(club);
-        clubRepo.Commit();
+        [HttpDelete("{id}")]
+        public IActionResult DeleteClub(int id)
+        {
+            var club = clubRepo.GetOne(null, c => c.Id == id, tracked: true);
+            if (club == null) return NotFound();
 
-        return Ok(club);
-    }
+            clubRepo.Delete(club);
+            clubRepo.Commit();
 
-    [HttpDelete("{id}")]
-    public IActionResult DeleteClub(int id)
-    {
-        var club = clubRepo.GetOne(null, c => c.Id == id, tracked: true);
-        if (club == null) return NotFound();
-
-        clubRepo.Delete(club);
-        clubRepo.Commit();
-
-        return NoContent();
+            return NoContent();
+        }
     }
 }

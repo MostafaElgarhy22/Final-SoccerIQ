@@ -1,10 +1,12 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization; // ✅ ضروري للحماية
 using Soccer_IQ.Models;
 using Soccer_IQ.Repository.IRepository;
 
 namespace Soccer_IQ.Controllers
 {
+    [Authorize] // ✅ حماية كل الـ endpoints هنا
     [ApiController]
     [Route("api/[controller]")]
     public class PlayersController : ControllerBase
@@ -16,7 +18,6 @@ namespace Soccer_IQ.Controllers
             _playerRepo = playerRepo;
         }
 
-        // GET: api/players
         [HttpGet]
         public IActionResult GetAllPlayers()
         {
@@ -24,14 +25,13 @@ namespace Soccer_IQ.Controllers
             return Ok(players);
         }
 
-        // GET: api/players/{id}
         [HttpGet("{id}")]
         public IActionResult GetPlayer(int id)
         {
             var player = _playerRepo.GetOne(
                 includeProps: new Expression<Func<Player, object>>[]
                 {
-                  p => p.Club
+                    p => p.Club
                 },
                 expression: p => p.Id == id
             );
@@ -40,8 +40,6 @@ namespace Soccer_IQ.Controllers
             return Ok(player);
         }
 
-
-        // POST: api/players
         [HttpPost]
         public IActionResult CreatePlayer([FromBody] Player player)
         {
@@ -50,11 +48,9 @@ namespace Soccer_IQ.Controllers
             _playerRepo.Create(player);
             _playerRepo.Commit();
 
-            // يعيد 201 مع Location header يشير إلى GET الخاص بالعنصر الجديد
             return CreatedAtAction(nameof(GetPlayer), new { id = player.Id }, player);
         }
 
-        // PUT: api/players/{id}
         [HttpPut("{id}")]
         public IActionResult UpdatePlayer(int id, [FromBody] Player updatedPlayer)
         {
@@ -64,7 +60,6 @@ namespace Soccer_IQ.Controllers
             var existing = _playerRepo.GetOne(null, p => p.Id == id, tracked: true);
             if (existing == null) return NotFound();
 
-            // عدّل الحقول المراد تحديثها
             existing.Name = updatedPlayer.Name;
             existing.PhotoUrl = updatedPlayer.PhotoUrl;
             existing.Position = updatedPlayer.Position;
@@ -76,7 +71,6 @@ namespace Soccer_IQ.Controllers
             return Ok(existing);
         }
 
-        // DELETE: api/players/{id}
         [HttpDelete("{id}")]
         public IActionResult DeletePlayer(int id)
         {

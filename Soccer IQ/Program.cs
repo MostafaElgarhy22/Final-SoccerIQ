@@ -29,6 +29,22 @@ namespace Soccer_IQ
                 });
             });
 
+            // ✅ JWT Authentication setup
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+                        )
+                    };
+                });
+
             // ✅ Services
             builder.Services.AddScoped<CsvSeeder>();
             builder.Services.AddScoped<AuthService>();
@@ -79,8 +95,10 @@ namespace Soccer_IQ
             // ✅ Apply open CORS
             app.UseCors("AllowAll");
 
+            // ✅ Apply authentication & authorization
             app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapControllers();
 
             using (var scope = app.Services.CreateScope())

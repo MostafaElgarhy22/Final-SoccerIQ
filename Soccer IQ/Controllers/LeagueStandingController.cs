@@ -1,77 +1,81 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization; // ⬅️ ضروري
 using Soccer_IQ.Models;
 using Soccer_IQ.Repository.IRepository;
 
-[ApiController]
-[Route("api/[controller]")]
-public class LeagueStandingsController : ControllerBase
+namespace Soccer_IQ.Controllers
 {
-    private readonly IRepository<LeagueStanding> standingsRepo;
-
-    public LeagueStandingsController(IRepository<LeagueStanding> standingsRepo)
+    [Authorize] // ✅ كده كل الـ endpoints محمية
+    [ApiController]
+    [Route("api/[controller]")]
+    public class LeagueStandingsController : ControllerBase
     {
-        this.standingsRepo = standingsRepo;
-    }
+        private readonly IRepository<LeagueStanding> standingsRepo;
 
-    [HttpGet]
-    public IActionResult GetAllStandings()
-    {
-        var standings = standingsRepo.GetAll(
-            includeProps: new Expression<Func<LeagueStanding, object>>[]
-            {
-            s => s.Club
-            }
-        );
-        return Ok(standings);
-    }
+        public LeagueStandingsController(IRepository<LeagueStanding> standingsRepo)
+        {
+            this.standingsRepo = standingsRepo;
+        }
 
+        [HttpGet]
+        public IActionResult GetAllStandings()
+        {
+            var standings = standingsRepo.GetAll(
+                includeProps: new Expression<Func<LeagueStanding, object>>[]
+                {
+                    s => s.Club
+                }
+            );
+            return Ok(standings);
+        }
 
-    [HttpGet("{id}")]
-    public IActionResult GetStanding(int id)
-    {
-        var standing = standingsRepo.GetOne(null, s => s.Id == id);
-        if (standing == null) return NotFound();
-        return Ok(standing);
-    }
+        [HttpGet("{id}")]
+        public IActionResult GetStanding(int id)
+        {
+            var standing = standingsRepo.GetOne(null, s => s.Id == id);
+            if (standing == null) return NotFound();
+            return Ok(standing);
+        }
 
-    [HttpPost]
-    public IActionResult CreateStanding([FromBody] LeagueStanding standing)
-    {
-        standingsRepo.Create(standing);
-        standingsRepo.Commit();
-        return CreatedAtAction(nameof(GetStanding), new { id = standing.Id }, standing);
-    }
+        [HttpPost]
+        public IActionResult CreateStanding([FromBody] LeagueStanding standing)
+        {
+            standingsRepo.Create(standing);
+            standingsRepo.Commit();
+            return CreatedAtAction(nameof(GetStanding), new { id = standing.Id }, standing);
+        }
 
-    [HttpPut("{id}")]
-    public IActionResult UpdateStanding(int id, [FromBody] LeagueStanding updatedStanding)
-    {
-        var standing = standingsRepo.GetOne(null, s => s.Id == id, tracked: true);
-        if (standing == null) return NotFound();
+        [HttpPut("{id}")]
+        public IActionResult UpdateStanding(int id, [FromBody] LeagueStanding updatedStanding)
+        {
+            var standing = standingsRepo.GetOne(null, s => s.Id == id, tracked: true);
+            if (standing == null) return NotFound();
 
-        standing.Played = updatedStanding.Played;
-        standing.Wins = updatedStanding.Wins;
-        standing.Draws = updatedStanding.Draws;
-        standing.Losses = updatedStanding.Losses;
-        standing.GoalsFor = updatedStanding.GoalsFor;
-        standing.GoalsAgainst = updatedStanding.GoalsAgainst;
-        standing.ClubId = updatedStanding.ClubId;
+            standing.Played = updatedStanding.Played;
+            standing.Wins = updatedStanding.Wins;
+            standing.Draws = updatedStanding.Draws;
+            standing.Losses = updatedStanding.Losses;
+            standing.GoalsFor = updatedStanding.GoalsFor;
+            standing.GoalsAgainst = updatedStanding.GoalsAgainst;
+            standing.ClubId = updatedStanding.ClubId;
 
-        standingsRepo.Edit(standing);
-        standingsRepo.Commit();
+            standingsRepo.Edit(standing);
+            standingsRepo.Commit();
 
-        return Ok(standing);
-    }
+            return Ok(standing);
+        }
 
-    [HttpDelete("{id}")]
-    public IActionResult DeleteStanding(int id)
-    {
-        var standing = standingsRepo.GetOne(null, s => s.Id == id, tracked: true);
-        if (standing == null) return NotFound();
+        [HttpDelete("{id}")]
+        public IActionResult DeleteStanding(int id)
+        {
+            var standing = standingsRepo.GetOne(null, s => s.Id == id, tracked: true);
+            if (standing == null) return NotFound();
 
-        standingsRepo.Delete(standing);
-        standingsRepo.Commit();
+            standingsRepo.Delete(standing);
+            standingsRepo.Commit();
 
-        return NoContent();
+            return NoContent();
+        }
     }
 }

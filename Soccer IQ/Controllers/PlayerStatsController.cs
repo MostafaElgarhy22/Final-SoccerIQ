@@ -1,71 +1,76 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization; // ⬅️ ضروري
 using Soccer_IQ.Models;
 using Soccer_IQ.Repository.IRepository;
 
-[ApiController]
-[Route("api/[controller]")]
-public class PlayerStatsController : ControllerBase
+namespace Soccer_IQ.Controllers
 {
-    private readonly IRepository<PLayerStat> playerStatRepo;
-
-    public PlayerStatsController(IRepository<PLayerStat> playerStatRepo)
+    [Authorize] // ✅ الحماية هنا
+    [ApiController]
+    [Route("api/[controller]")]
+    public class PlayerStatsController : ControllerBase
     {
-        this.playerStatRepo = playerStatRepo;
-    }
+        private readonly IRepository<PLayerStat> playerStatRepo;
 
-    [HttpGet]
-    public IActionResult GetAllPlayerStats()
-    {
-        var playerStats = playerStatRepo.GetAll();
-        return Ok(playerStats);
-    }
+        public PlayerStatsController(IRepository<PLayerStat> playerStatRepo)
+        {
+            this.playerStatRepo = playerStatRepo;
+        }
 
-    [HttpGet("{id}")]
-    public IActionResult GetPlayerStat(int id)
-    {
-        var playerStat = playerStatRepo.GetOne(null, ps => ps.Id == id);
-        if (playerStat == null) return NotFound();
-        return Ok(playerStat);
-    }
+        [HttpGet]
+        public IActionResult GetAllPlayerStats()
+        {
+            var playerStats = playerStatRepo.GetAll();
+            return Ok(playerStats);
+        }
 
-    [HttpPost]
-    public IActionResult CreatePlayerStat([FromBody] PLayerStat playerStat)
-    {
-        playerStatRepo.Create(playerStat);
-        playerStatRepo.Commit();
-        return CreatedAtAction(nameof(GetPlayerStat), new { id = playerStat.Id }, playerStat);
-    }
+        [HttpGet("{id}")]
+        public IActionResult GetPlayerStat(int id)
+        {
+            var playerStat = playerStatRepo.GetOne(null, ps => ps.Id == id);
+            if (playerStat == null) return NotFound();
+            return Ok(playerStat);
+        }
 
-    [HttpPut("{id}")]
-    public IActionResult UpdatePlayerStat(int id, [FromBody] PLayerStat updatedPlayerStat)
-    {
-        var playerStat = playerStatRepo.GetOne(null, ps => ps.Id == id, tracked: true);
-        if (playerStat == null) return NotFound();
+        [HttpPost]
+        public IActionResult CreatePlayerStat([FromBody] PLayerStat playerStat)
+        {
+            playerStatRepo.Create(playerStat);
+            playerStatRepo.Commit();
+            return CreatedAtAction(nameof(GetPlayerStat), new { id = playerStat.Id }, playerStat);
+        }
 
-        playerStat.Goals = updatedPlayerStat.Goals;
-        playerStat.Assists = updatedPlayerStat.Assists;
-        playerStat.MinutesPlayed = updatedPlayerStat.MinutesPlayed;
-        playerStat.Matches = updatedPlayerStat.Matches;
-        playerStat.Season = updatedPlayerStat.Season;
-        playerStat.XG = updatedPlayerStat.XG;
-        playerStat.XA = updatedPlayerStat.XA;
-        playerStat.PlayerId = updatedPlayerStat.PlayerId;
+        [HttpPut("{id}")]
+        public IActionResult UpdatePlayerStat(int id, [FromBody] PLayerStat updatedPlayerStat)
+        {
+            var playerStat = playerStatRepo.GetOne(null, ps => ps.Id == id, tracked: true);
+            if (playerStat == null) return NotFound();
 
-        playerStatRepo.Edit(playerStat);
-        playerStatRepo.Commit();
+            playerStat.Goals = updatedPlayerStat.Goals;
+            playerStat.Assists = updatedPlayerStat.Assists;
+            playerStat.MinutesPlayed = updatedPlayerStat.MinutesPlayed;
+            playerStat.Matches = updatedPlayerStat.Matches;
+            playerStat.Season = updatedPlayerStat.Season;
+            playerStat.XG = updatedPlayerStat.XG;
+            playerStat.XA = updatedPlayerStat.XA;
+            playerStat.PlayerId = updatedPlayerStat.PlayerId;
 
-        return Ok(playerStat);
-    }
+            playerStatRepo.Edit(playerStat);
+            playerStatRepo.Commit();
 
-    [HttpDelete("{id}")]
-    public IActionResult DeletePlayerStat(int id)
-    {
-        var playerStat = playerStatRepo.GetOne(null, ps => ps.Id == id, tracked: true);
-        if (playerStat == null) return NotFound();
+            return Ok(playerStat);
+        }
 
-        playerStatRepo.Delete(playerStat);
-        playerStatRepo.Commit();
+        [HttpDelete("{id}")]
+        public IActionResult DeletePlayerStat(int id)
+        {
+            var playerStat = playerStatRepo.GetOne(null, ps => ps.Id == id, tracked: true);
+            if (playerStat == null) return NotFound();
 
-        return NoContent();
+            playerStatRepo.Delete(playerStat);
+            playerStatRepo.Commit();
+
+            return NoContent();
+        }
     }
 }
