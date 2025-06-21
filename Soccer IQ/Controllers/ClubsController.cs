@@ -15,13 +15,13 @@ public class ClubsController : ControllerBase
     }
 
     [HttpGet]
+    [HttpGet]
     public IActionResult GetAllClubs()
     {
-        var clubs = clubRepo.GetAll(
-            includeProps: new Expression<Func<Club, object>>[] { c => c.Players }
-        );
+        var clubs = clubRepo.GetAll();
         return Ok(clubs);
     }
+
 
 
     [HttpGet("{id}")]

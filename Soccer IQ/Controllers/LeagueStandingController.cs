@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq.Expressions;
+using Microsoft.AspNetCore.Mvc;
 using Soccer_IQ.Models;
 using Soccer_IQ.Repository.IRepository;
 
@@ -16,9 +17,15 @@ public class LeagueStandingsController : ControllerBase
     [HttpGet]
     public IActionResult GetAllStandings()
     {
-        var standings = standingsRepo.GetAll();
+        var standings = standingsRepo.GetAll(
+            includeProps: new Expression<Func<LeagueStanding, object>>[]
+            {
+            s => s.Club
+            }
+        );
         return Ok(standings);
     }
+
 
     [HttpGet("{id}")]
     public IActionResult GetStanding(int id)
